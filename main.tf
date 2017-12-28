@@ -1,37 +1,21 @@
-provider "aws" {
-  region = "us-east-1"
+variable "aws_rds_dev_pw" {
+  description = "Environment variable defines password for intent-db-dev"
 }
 
-resource "aws_instance" "celes" {
-  ami           = "ami-40d28157"
-  instance_type = "t2.micro"
-  vpc_security_group_ids = ["${aws_security_group.celes.id}"]
-
-  user_data = <<-EOF
-              #!/bin/bash
-              echo "w0t" > index.html
-              nohup busybox httpd -f -p 8080 &
-              EOF
-
-  tags {
-    Name = "celes-terraform-example"
-    description = "Example Webserver EC2 instance for Project Celes"
-  }
-}
-
-resource "aws_security_group" "celes" {
-  name = "celes-example-web"
-
-  ingress {
-    from_port = 8080
-    to_port = 8080
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags {
-    Name = "celes-example-web"
-    secure = "nope"
-    description = "Example security group for Project Celes"
+resource "aws_db_instance" "intent-db-dev" {
+  allocated_storage                   = 20
+  storage_type                        = "gp2"
+  engine                              = "mysql"
+  engine_version                      = "5.7.19"
+  instance_class                      = "db.t2.micro"
+  name                                = "intent"
+  username                            = "root"
+  password                            = "${var.aws_rds_dev_pw}"
+  iam_database_authentication_enabled = "false"
+  publicly_accessible                 = "true"
+  
+  tags = {
+    infrastructure_layer = "data"
+    environment          = "dev"
   }
 }
